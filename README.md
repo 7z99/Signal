@@ -1,2 +1,2 @@
 # Signal
-Basic OOP signal module.
+Basic object-oriented signal module designed to work seamlessly with RBXScriptSignal and RBXScriptConnection.
