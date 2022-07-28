@@ -24,6 +24,10 @@ end
 
 -- signal methods --
 
+function signal:IsSignal()
+	return true
+end
+
 function signal.new()
 	return setmetatable({
 		['_connections'] = {};
