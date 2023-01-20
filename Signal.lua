@@ -56,12 +56,13 @@ function signal:Fire(...)
 	table.clear(self._yields)
 	
 	for i,v in ipairs(self._once) do
+		print(v)
 		task.spawn(v.func, ...)
 		if not v._dead then
 			v:Disconnect()
-			table.remove(self._once, v)
 		end
 	end
+	table.clear(self._once)
 end
 
 function signal:Connect(func)
@@ -96,6 +97,9 @@ function signal:Destroy()
 			task.spawn(v)
 		end
 	end
+	for i, v in ipairs(self._once) do
+		v:Disconnect()
+	end
 	table.clear(self._yields)
 
 	setmetatable(self, nil)
@@ -106,12 +110,13 @@ end
 function signal:Once(func)
 	assert(not self._dead, 'Signal is dead!')
 	assert(self.IsSignal, 'Attempt to call member function Signal.Connect on a non-signal value!')
+	assert(func, 'No function!')
 	local newConnection = setmetatable({
 		func = func;
 		orgSelf = self;
 		Connected = true
 	}, connection)
-	table.insert(self._once, connection)
+	table.insert(self._once, newConnection)
 	return newConnection
 end
 signal.IsSignal = true
