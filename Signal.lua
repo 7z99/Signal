@@ -1,6 +1,7 @@
 local signal = {}
 signal.__index = signal
 
+
 local connection = {}
 connection.__index = connection
 
@@ -92,16 +93,22 @@ function signal:Destroy()
 	for i, v in ipairs(self._connections) do
 		v:Disconnect()
 	end
+	table.clear(self._connections)
+	
 	for i, v in ipairs(self._yields) do
 		if coroutine.status(v) == 'suspended' then
-			task.spawn(v)
+			task.cancel(v)
 		end
 	end
+	table.clear(self._yields)
+	
 	for i, v in ipairs(self._once) do
 		v:Disconnect()
 	end
 	table.clear(self._yields)
-
+	
+	table.clear(self)
+	
 	setmetatable(self, nil)
 
 	self._dead = true
@@ -111,16 +118,30 @@ function signal:Once(func)
 	assert(not self._dead, 'Signal is dead!')
 	assert(self.IsSignal, 'Attempt to call member function Signal.Connect on a non-signal value!')
 	assert(func, 'No function!')
+	
 	local newConnection = setmetatable({
 		func = func;
 		orgSelf = self;
 		Connected = true
 	}, connection)
 	table.insert(self._once, newConnection)
+	
 	return newConnection
 end
 signal.IsSignal = true
 
-export type connection = typeof(signal.new():Connect())
+type void = nil
 
-return signal
+export type Connection = {
+	Disconnect: (self: Connection) -> void;
+}
+
+export type Signal <T...> = {
+	Fire: (self: any, T...) -> (...any);
+	Connect: (self: any, func: (T...) -> void) -> Connection;
+	Once: (self: any, func: (T...) -> void) -> Connection;
+	Wait: (self: any) -> T...;
+}
+
+
+return signal :: { new: () -> Signal <...any> }
